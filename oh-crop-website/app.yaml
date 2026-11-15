@@ -1,0 +1,6 @@
+name: FieldSense Corn Advisor
+description: Live corn screening with offline advice and basic capture guidance
+icon: 🌽
+ports:
+  - 8080
+bricks: []

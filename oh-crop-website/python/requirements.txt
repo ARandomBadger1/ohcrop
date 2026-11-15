@@ -1,0 +1,4 @@
+Flask>=3.1,<4
+onnxruntime>=1.20,<2
+numpy>=1.26,<3
+Pillow>=11,<14

@@ -1,0 +1,45 @@
+{
+  "version": "2026-11-14",
+  "note": "Screening guidance, not a confirmed diagnosis. Confirm with local agronomic advice before treatment.",
+  "cards": {
+    "healthy": {
+      "title": "No supported disease detected",
+      "check": "The model only screens four conditions; this result does not rule out other diseases, pests or nutrient problems.",
+      "action": "Keep a dated photo and observe changes. If visible damage persists, photograph the whole plant and ask a local crop adviser.",
+      "url": "https://extension.umn.edu/corn/corn-pest-management"
+    },
+    "common_rust": {
+      "title": "Suspected common rust",
+      "check": "Check both leaf surfaces for raised rust-colored to dark brown pustules.",
+      "action": "Photograph both surfaces and compare nearby plants. Record crop stage and affected leaf positions before seeking confirmation.",
+      "url": "https://extension.umn.edu/agriculture/crop-production/corn/common-rust-on-corn"
+    },
+    "gray_leaf_spot": {
+      "title": "Suspected gray leaf spot",
+      "check": "Look for narrow rectangular tan-to-gray lesions bounded by leaf veins.",
+      "action": "Capture lesions with visible veins and a whole-plant view. Check several plants; similar leaf spots need confirmation.",
+      "url": "https://extension.umn.edu/agriculture/crop-production/corn/gray-leaf-spot-on-corn"
+    },
+    "northern_leaf_blight": {
+      "title": "Suspected northern leaf blight",
+      "check": "Look for long, elliptical or cigar-shaped tan-to-gray lesions.",
+      "action": "Photograph the full lesion and its edges, plus the whole plant. Record whether symptoms occur on nearby plants and seek confirmation.",
+      "url": "https://extension.umn.edu/agriculture/crop-production/corn/northern-corn-leaf-blight"
+    },
+    "non_target": {
+      "title": "Corn leaf not confirmed",
+      "check": "This score does not establish that corn is absent, or that the camera is too far away.",
+      "action": "Try one corn leaf filling most of the view, reduce background, keep it in focus and avoid screen glare."
+    },
+    "uncertain": {
+      "title": "Unable to judge reliably",
+      "check": "The supported classes are not sufficiently separated in this frame.",
+      "action": "Hold still, use even light and take a clear close-up of one leaf. If results disagree, save photos for review rather than choosing a disease."
+    },
+    "waiting": {
+      "title": "Hold steady",
+      "check": "Waiting for three consecutive matching accepted predictions.",
+      "action": "Keep the same leaf in view. This consistency check reduces flicker; it does not prove a diagnosis."
+    }
+  }
+}

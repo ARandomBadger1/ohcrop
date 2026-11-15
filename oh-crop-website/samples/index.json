@@ -1,0 +1,42 @@
+[
+  {
+    "file": "common_rust-1.jpg",
+    "label": "common_rust",
+    "split": "test"
+  },
+  {
+    "file": "common_rust-2.jpg",
+    "label": "common_rust",
+    "split": "test"
+  },
+  {
+    "file": "gray_leaf_spot-1.jpg",
+    "label": "gray_leaf_spot",
+    "split": "test"
+  },
+  {
+    "file": "gray_leaf_spot-2.jpg",
+    "label": "gray_leaf_spot",
+    "split": "test"
+  },
+  {
+    "file": "healthy-1.jpg",
+    "label": "healthy",
+    "split": "test"
+  },
+  {
+    "file": "healthy-2.jpg",
+    "label": "healthy",
+    "split": "test"
+  },
+  {
+    "file": "northern_leaf_blight-1.jpg",
+    "label": "northern_leaf_blight",
+    "split": "test"
+  },
+  {
+    "file": "northern_leaf_blight-2.jpg",
+    "label": "northern_leaf_blight",
+    "split": "test"
+  }
+]
