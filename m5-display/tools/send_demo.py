@@ -25,7 +25,7 @@ def main():
             for message in messages:
                 print(message, flush=True)
                 for _ in range(6):
-                    device.write((json.dumps({"v": 1, **message}) + "\n").encode())
+                    device.write((json.dumps({"v": 1, **message, "environment": {"available": True, "temperature_c": 24.5, "humidity_pct": 61.2}}) + "\n").encode())
                     time.sleep(0.5)
 
 

@@ -68,3 +68,11 @@ python3 tools/send_demo.py /dev/cu.usbmodemXXXX
 2026-11-14 实物进展：电脑识别到 ESP32-S3 USB 串口 `/dev/cu.usbmodem1101`，固件已成功烧录并通过写入哈希校验；已通过该串口发送 ready、too_far、too_close、blurry、recognizing 及四类 result 模拟消息，发送过程无错误。屏幕实际显示与超时行为仍待使用者目视确认；UNO Q 尚未接入。
 
 使用者随后确认：屏幕正常显示并切换，未报告文字截断。超时切换尚未单独确认。
+
+## 新增温湿度（待烧录新版）
+
+完整状态可增加 `environment:{"available":true,"temperature_c":24.5,"humidity_pct":61.2}`。无有效读数时发送 `environment:{"available":false}`。识别页显示简短读数，按屏幕按钮切换独立温湿度页；五秒 USB 超时后两页均隐藏旧数值。模拟发送工具带固定环境示例，仅验证显示。
+
+真实采集、UNO Q 部署和验证状态见 `../corn-leaf/THERMO_INTEGRATION.md`。新版已编译，尚未烧录；之前实物验证的是不含温湿度的版本。
+
+最新实物结果：2026-11-14 温湿度新版已通过 esptool ROM 模式（`--no-stub`）烧录并校验成功。用户确认固定值显示和按钮切换正常，接回 UNO Q 后真实温湿度持续更新。部署中的 App 为 FieldSense Corn Thermo v2。此结果覆盖前文“待烧录新版”的历史记录。

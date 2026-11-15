@@ -8,7 +8,7 @@ function show(result,isLive=false){
  last=result;el('cornResult').textContent=result.display;
  el('cornScore').textContent=result.status==='non_target'?`Corn target score ${(result.target_probability*100).toFixed(1)}% — disease classification skipped`:`Disease confidence ${(result.confidence*100).toFixed(1)}% · corn target ${(result.target_probability*100).toFixed(1)}% · inference ${result.inference_ms} ms`;
  el('cornMessage').textContent=`${result.source} · ${new Date(result.timestamp).toLocaleString()} · ${result.field==='unassigned'?'No field assigned':result.field+' field'}`;
- if(!isLive)el('cornPreview').src=`/api/images/${encodeURIComponent(result.id)}.jpg`;
+ if(!isLive&&!live)el('cornPreview').src=`/api/images/${encodeURIComponent(result.id)}.jpg`;
  el('cornPreview').hidden=false;el('cornPlaceholder').hidden=true;
  el('cornProbabilities').replaceChildren(...Object.entries(result.probabilities).sort((a,b)=>b[1]-a[1]).map(([key,value])=>{
   const row=document.createElement('div');row.className='corn-probability';
@@ -27,16 +27,16 @@ function syncEvents(rows){
 }
 async function refresh(){
  try{
-  const response=await fetch('/api/status',{cache:'no-store'});if(!response.ok)throw Error('Local model API unavailable');
+  const response=await fetch('/api/status',{cache:'no-store',signal:AbortSignal.timeout(4000)});if(!response.ok)throw Error('Local model API unavailable');
   const status=await response.json();if(!status.local_inference)throw Error('Local model API unavailable');
-  el('cornConnection').textContent='Local model connected';
+  el('cornConnection').textContent=status.relay?'UNO Q connected via relay':'UNO Q connected locally';
   cameraReady=status.camera.available;
   el('cornCapture').disabled=!cameraReady||busy;
-  if(live&&cameraReady&&!streamStarted){el('cornPreview').src='/api/stream';el('cornPreview').hidden=false;el('cornPlaceholder').hidden=true;streamStarted=true;}
+  
   if(!last)el('cornMessage').textContent=status.camera.available?'USB camera ready. Confirm a corn leaf, then analyze.':status.camera.error||'Camera unavailable; upload a leaf photo.';
-  const r=await fetch('/api/events',{cache:'no-store'});if(!r.ok)throw Error('Cannot load events');const rows=await r.json();syncEvents(rows);
-  if(rows.length&&!last)show(rows[0]);
- }catch(e){el('cornConnection').textContent='Local model offline';el('cornCapture').disabled=true;el('cornMessage').textContent='Open Oh, Crop! from the UNO Q address on port 8080. Environmental demo remains available.';}
+  const r=await fetch('/api/events',{cache:'no-store',signal:AbortSignal.timeout(4000)});if(!r.ok)throw Error('Cannot load events');const rows=await r.json();syncEvents(rows);
+  if(rows.length&&!last&&!live)show(rows[0]);
+ }catch(e){cameraReady=false;el('cornConnection').textContent='Device offline';el('cornCapture').disabled=true;el('cornMessage').textContent='Device data unavailable. Reconnecting…';}
 }
 async function analyze(file){
  if(busy)return;
@@ -58,7 +58,7 @@ el('cornLive').onclick=()=>setLive(!live);
 async function liveLoop(){
  try{
   if(live&&cameraReady&&!busy){
-   const r=await fetch('/api/live-predict',{method:'POST'});const result=await r.json();
+   const r=await fetch('/api/live-predict',{method:'POST',signal:AbortSignal.timeout(5000)});const result=await r.json();
    if(!r.ok)throw Error(result.error||'Camera prediction failed');
    if(live)show(result,true);
   }
@@ -66,6 +66,23 @@ async function liveLoop(){
  finally{setTimeout(liveLoop,250);}
 }
 liveLoop();
+async function frameLoop(){
+ if(live){
+  if(cameraReady){
+   const image=new Image();
+   const loaded=await new Promise(resolve=>{
+    const timer=setTimeout(()=>resolve(false),4000);
+    image.onload=()=>{clearTimeout(timer);resolve(true)};
+    image.onerror=()=>{clearTimeout(timer);resolve(false)};
+    image.src='/api/snapshot?t='+Date.now();
+   });
+   if(live&&loaded){el('cornPreview').src=image.src;el('cornPreview').hidden=false;el('cornPlaceholder').hidden=true;}
+   else if(live){el('cornPreview').hidden=true;el('cornPlaceholder').hidden=false;el('cornPlaceholder').textContent='Camera unavailable. Reconnecting…';}
+  }else{el('cornPreview').hidden=true;el('cornPlaceholder').hidden=false;el('cornPlaceholder').textContent='Waiting for fresh camera frames…';}
+ }
+ setTimeout(frameLoop,500);
+}
+frameLoop();
 el('cornCapture').onclick=()=>analyze();el('cornUpload').onchange=e=>{if(e.target.files[0])analyze(e.target.files[0]);};
 fetch('/samples/index.json').then(r=>r.ok?r.json():[]).then(rows=>{el('cornSamples').replaceChildren(...rows.map(row=>{const a=document.createElement('button');a.className='text-button';a.textContent='Test '+(names[row.label]||row.label);a.onclick=async()=>{try{const r=await fetch('/samples/'+encodeURIComponent(row.file));if(!r.ok)throw Error('Sample unavailable');const blob=await r.blob();if(live)setLive(false);await analyze(new File([blob],row.file,{type:'image/jpeg'}));}catch(e){el('cornMessage').textContent=e.message;}};return a;}));}).catch(()=>{});
 refresh();setInterval(refresh,5000);

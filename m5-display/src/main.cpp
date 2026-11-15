@@ -9,12 +9,16 @@ struct DisplayState {
   String status = "waiting";
   String label;
   float confidence = -1;
+  bool environmentAvailable = false;
+  float temperature = 0;
+  float humidity = 0;
 };
 DisplayState current;
 uint32_t lastMessage = 0;
 bool received = false;
 bool stale = false;
 bool dirty = true;
+bool environmentPage = false;
 constexpr uint32_t TIMEOUT_MS = 5000;
 constexpr size_t MAX_LINE = 512;
 char lineBuffer[MAX_LINE + 1];
@@ -51,6 +55,18 @@ bool acceptMessage(const char* payload) {
         return false;
     }
   }
+  JsonObject env = doc["environment"].as<JsonObject>();
+  if (env["available"].is<bool>() && env["available"].as<bool>() &&
+      env["temperature_c"].is<float>() && env["humidity_pct"].is<float>()) {
+    next.temperature = env["temperature_c"].as<float>();
+    next.humidity = env["humidity_pct"].as<float>();
+    next.environmentAvailable = isfinite(next.temperature) && isfinite(next.humidity) &&
+        next.temperature >= -40 && next.temperature <= 125 &&
+        next.humidity >= 0 && next.humidity <= 100;
+  }
+  dirty |= current.environmentAvailable != next.environmentAvailable ||
+           int(current.temperature * 10) != int(next.temperature * 10) ||
+           int(current.humidity * 10) != int(next.humidity * 10);
   dirty |= stale || !received || current.status != next.status ||
            current.label != next.label ||
            int(current.confidence * 100) != int(next.confidence * 100);
@@ -81,6 +97,25 @@ void pollUsb() {
 
 void render() {
   auto& lcd = M5.Display;
+  if (environmentPage) {
+    lcd.fillScreen(TFT_BLACK);
+    lcd.setTextColor(TFT_CYAN, TFT_BLACK);
+    lcd.setTextSize(1);
+    lcd.setCursor(5, 5); lcd.print("MODULINO THERMO");
+    lcd.setTextColor(TFT_WHITE, TFT_BLACK);
+    lcd.setCursor(5, 30);
+    if (received && !stale && current.environmentAvailable) {
+      lcd.print("Temperature");
+      lcd.setTextSize(2); lcd.setCursor(5, 45);
+      lcd.printf("%.1f C", current.temperature);
+      lcd.setTextSize(1); lcd.setCursor(5, 73); lcd.print("Humidity");
+      lcd.setTextSize(2); lcd.setCursor(5, 88);
+      lcd.printf("%.1f %%", current.humidity);
+    } else lcd.print("No fresh sensor data");
+    lcd.setTextSize(1); lcd.setCursor(5, 117); lcd.print("Press: leaf result");
+    dirty = false;
+    return;
+  }
   uint16_t color = TFT_CYAN;
   const char* title = "WAITING";
   const char* body = "Connect USB\nto UNO Q";
@@ -116,7 +151,13 @@ void render() {
   lcd.setTextSize(1);
   lcd.setCursor(5, 64);
   lcd.println(body);
-  lcd.setCursor(5, 110);
+  lcd.setTextSize(1);
+  lcd.setCursor(5, 93);
+  if (received && !stale && current.environmentAvailable)
+    lcd.printf("%.1fC  %.1f%%RH", current.temperature, current.humidity);
+  else lcd.print("Thermo: unavailable");
+  lcd.setCursor(5, 119); lcd.print("Press: environment");
+  lcd.setCursor(5, 106);
   if (received && !stale && current.status == "result" && current.confidence >= 0)
     lcd.printf("Model score: %.0f%%", current.confidence * 100);
   else lcd.print(stale ? "Update timed out" : "Live status");
@@ -137,6 +178,7 @@ void setup() {
 void loop() {
   M5.update();
   pollUsb();
+  if (M5.BtnA.wasPressed()) { environmentPage = !environmentPage; dirty = true; }
   if (received && !stale && uint32_t(millis() - lastMessage) >= TIMEOUT_MS) {
     stale = true;
     dirty = true;
